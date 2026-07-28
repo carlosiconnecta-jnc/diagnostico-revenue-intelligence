@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico de Revenue Intelligence — AI Applied</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-950:#0a1220;
+    --navy-900:#0e1a2e;
+    --navy-800:#132238;
+    --navy-700:#1b2f4a;
+    --terracota:#c1521f;
+    --terracota-light:#e0824f;
+    --cream:#f4efe6;
+    --muted:#8fa1b8;
+    --line:rgba(244,239,230,0.10);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(193,82,31,0.14), transparent 60%),
+      radial-gradient(900px 500px at 100% 110%, rgba(27,47,74,0.5), transparent 60%),
+      var(--navy-950);
+    color:var(--cream);
+    font-family:'Inter', -apple-system, sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .display{font-family:'Fraunces', serif;}
+  #app{width:100%; max-width:640px;}
+
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--terracota-light);
+    font-weight:600;
+    margin-bottom:14px;
+  }
+
+  .progress{
+    display:flex;
+    gap:6px;
+    margin-bottom:36px;
+  }
+  .progress .seg{
+    height:2px;
+    flex:1;
+    background:var(--line);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .progress .seg .fill{
+    height:100%;
+    width:0%;
+    background:var(--terracota);
+    transition:width .5s ease;
+  }
+
+  .screen{display:none; animation:fadeUp .5s ease;}
+  .screen.active{display:block;}
+  @keyframes fadeUp{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  h1{
+    font-size:34px;
+    line-height:1.15;
+    font-weight:500;
+    letter-spacing:-0.01em;
+    margin-bottom:18px;
+  }
+  h2{
+    font-size:26px;
+    line-height:1.25;
+    font-weight:500;
+    margin-bottom:16px;
+  }
+  p.lead{
+    font-size:16px;
+    line-height:1.6;
+    color:var(--muted);
+    margin-bottom:28px;
+  }
+
+  .card{
+    background:var(--navy-900);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:32px;
+  }
+
+  button.primary{
+    background:var(--terracota);
+    color:var(--cream);
+    border:none;
+    padding:16px 28px;
+    border-radius:8px;
+    font-family:'Inter', sans-serif;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .2s ease, transform .2s ease;
+    width:100%;
+  }
+  button.primary:hover{background:var(--terracota-light); transform:translateY(-1px);}
+  button.primary:disabled{opacity:0.35; cursor:not-allowed; transform:none;}
+  button.primary:focus-visible{outline:2px solid var(--terracota-light); outline-offset:3px;}
+
+  button.secondary{
+    background:transparent;
+    color:var(--cream);
+    border:1px solid var(--line);
+    padding:14px 24px;
+    border-radius:8px;
+    font-family:'Inter', sans-serif;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    width:100%;
+    margin-top:12px;
+    transition:border-color .2s ease, background .2s ease;
+  }
+  button.secondary:hover{border-color:var(--terracota-light); background:rgba(193,82,31,0.06);}
+  button.secondary:focus-visible{outline:2px solid var(--terracota-light); outline-offset:3px;}
+
+  input[type=text], input[type=number], input[type=email]{
+    width:100%;
+    background:var(--navy-800);
+    border:1px solid var(--line);
+    color:var(--cream);
+    padding:16px;
+    border-radius:8px;
+    font-family:'Inter', sans-serif;
+    font-size:16px;
+    margin-bottom:20px;
+  }
+  input:focus{outline:2px solid var(--terracota-light); outline-offset:1px; border-color:transparent;}
+  label.qlabel{display:block; font-size:13px; color:var(--muted); margin-bottom:8px;}
+
+  .options{display:flex; flex-direction:column; gap:10px; margin-bottom:24px;}
+  .opt{
+    background:var(--navy-800);
+    border:1px solid var(--line);
+    color:var(--cream);
+    padding:16px;
+    border-radius:8px;
+    font-family:'Inter', sans-serif;
+    font-size:15px;
+    text-align:left;
+    cursor:pointer;
+    transition:all .2s ease;
+  }
+  .opt:hover{border-color:var(--terracota-light);}
+  .opt.selected{border-color:var(--terracota); background:rgba(193,82,31,0.12);}
+
+  .agent-block{
+    border-top:1px solid var(--line);
+    margin-top:24px;
+    padding-top:20px;
+    animation:fadeUp .5s ease;
+  }
+  .agent-tag{
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--terracota-light);
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .agent-text{font-size:15px; line-height:1.65; color:var(--cream);}
+
+  .intro-agents{
+    background:var(--navy-800);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 20px;
+    font-size:14px;
+    line-height:1.6;
+    color:var(--muted);
+    margin-bottom:28px;
+  }
+
+  .score-hero{
+    text-align:center;
+    padding:12px 0 28px;
+  }
+  .score-num{
+    font-family:'Fraunces', serif;
+    font-size:56px;
+    font-weight:500;
+    color:var(--terracota-light);
+    line-height:1;
+  }
+  .score-label{font-size:14px; color:var(--muted); margin-top:8px;}
+
+  .bars{display:flex; flex-direction:column; gap:14px; margin:28px 0;}
+  .bar-row{display:flex; align-items:center; gap:14px; font-size:13px;}
+  .bar-row .bname{width:120px; color:var(--muted); flex-shrink:0;}
+  .bar-track{flex:1; height:8px; background:var(--navy-800); border-radius:4px; overflow:hidden;}
+  .bar-fill{height:100%; background:linear-gradient(90deg, var(--terracota), var(--terracota-light)); width:0%; transition:width 1s ease;}
+  .bar-pct{width:38px; text-align:right; color:var(--cream);}
+
+  .conclusion{
+    background:var(--navy-800);
+    border-left:2px solid var(--terracota);
+    padding:20px 22px;
+    border-radius:0 8px 8px 0;
+    margin:28px 0;
+    font-size:15px;
+    line-height:1.65;
+  }
+  .conclusion .ctitle{
+    font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--terracota-light); font-weight:700; margin-bottom:10px;
+  }
+
+  .footer-note{
+    margin-top:36px;
+    padding-top:24px;
+    border-top:1px solid var(--line);
+    font-size:14px;
+    line-height:1.6;
+    color:var(--muted);
+  }
+  .footer-note a{color:var(--terracota-light); text-decoration:none; font-weight:600;}
+  .footer-note a:hover{text-decoration:underline;}
+
+  .status-msg{font-size:14px; color:var(--muted); margin-top:14px; text-align:center;}
+
+  @media (max-width:480px){
+    h1{font-size:27px;}
+    h2{font-size:22px;}
+    .card{padding:22px;}
+    .score-num{font-size:44px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SCREEN 0 — ABERTURA -->
+  <section class="screen active" id="s0">
+    <div class="eyebrow">AI Applied</div>
+    <h1 class="display">Diagnóstico de Revenue Intelligence: quanto da receita você realmente consegue explicar?</h1>
+    <p class="lead">Descubra em apenas 5 minutos quanto dinheiro está vazando na sua empresa pela desconexão entre marketing e comercial.</p>
+    <div class="card">
+      <p style="line-height:1.6; color:var(--muted); margin-bottom:24px;">Toda empresa investe para gerar receita. Poucas conseguem provar exatamente quanto desse resultado veio de cada investimento. Este diagnóstico identifica onde sua receita está se perdendo entre marketing, comercial e operação.</p>
+      <button class="primary" onclick="goTo(1)">Começar Diagnóstico →</button>
+    </div>
+  </section>
+
+  <!-- SCREENS 1-4 — BASE FINANCEIRA -->
+  <section class="screen" id="s1">
+    <div class="progress" id="progress-1"></div>
+    <div class="card">
+      <label class="qlabel">Pergunta 1 de 7</label>
+      <h2>Quanto sua empresa investe por mês em geração de demanda?</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">Tráfego pago, conteúdo, SDR — tudo que existe pra gerar oportunidade.</p>
+      <input type="number" id="q1" placeholder="R$ 0,00" inputmode="numeric">
+      <button class="primary" onclick="answerQ1()">Continuar</button>
+      <div class="status-msg" id="ack1"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="s2">
+    <div class="progress" id="progress-2"></div>
+    <div class="card">
+      <label class="qlabel">Pergunta 2 de 7</label>
+      <h2>Quantas oportunidades realmente qualificadas esse investimento gera por mês?</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">Não é lead que preencheu formulário — é quem o comercial de fato considera uma chance real de venda.</p>
+      <input type="number" id="q2" placeholder="Número de oportunidades" inputmode="numeric">
+      <button class="primary" onclick="answerQ2()">Continuar</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s3">
+    <div class="progress" id="progress-3"></div>
+    <div class="card">
+      <label class="qlabel">Pergunta 3 de 7</label>
+      <h2>Qual percentual dessas oportunidades se torna cliente?</h2>
+      <input type="number" id="q3" placeholder="%" inputmode="numeric" max="100">
+      <button class="primary" onclick="answerQ3()">Continuar</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s4">
+    <div class="progress" id="progress-4"></div>
+    <div class="card">
+      <label class="qlabel">Pergunta 4 de 7</label>
+      <h2>Qual o ticket médio das vendas fechadas?</h2>
+      <input type="number" id="q4" placeholder="R$ 0,00" inputmode="numeric">
+      <button class="primary" onclick="answerQ4()">Continuar</button>
+      <div class="status-msg" id="ack4"></div>
+    </div>
+  </section>
+
+  <!-- SCREEN 5 — Q5 ATTRIBUTION (LUCAS) -->
+  <section class="screen" id="s5">
+    <div class="progress" id="progress-5"></div>
+    <div class="card">
+      <div class="intro-agents" id="agents-intro">Sua análise será conduzida por agentes especializados em diferentes áreas da operação. Cada um analisa apenas sua especialidade, mas todos compartilham o mesmo contexto para construir um diagnóstico único.</div>
+      <label class="qlabel">Pergunta 5 de 7</label>
+      <h2>Hoje, seu marketing consegue provar exatamente qual campanha originou cada venda fechada?</h2>
+      <div class="options" id="q5-opts">
+        <button class="opt" onclick="answerQ5('sim', this)">Sim</button>
+        <button class="opt" onclick="answerQ5('parcial', this)">Parcialmente</button>
+        <button class="opt" onclick="answerQ5('nao', this)">Não</button>
+      </div>
+      <div class="agent-block" id="agent5-block" style="display:none;">
+        <div class="agent-tag">Lucas — AI Attribution Agent</div>
+        <div class="agent-text" id="agent5-text"></div>
+      </div>
+      <button class="primary" id="btn5" style="display:none; margin-top:20px;" onclick="goTo(6)">Continuar</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 6 — Q6 DATA ARCHITECTURE (MARINA) -->
+  <section class="screen" id="s6">
+    <div class="progress" id="progress-6"></div>
+    <div class="card">
+      <label class="qlabel">Pergunta 6 de 7</label>
+      <h2>Os dados de marketing, CRM e financeiro estão integrados, ou dependem de planilhas e conferências manuais?</h2>
+      <div class="options" id="q6-opts">
+        <button class="opt" onclick="answerQ6('integrado', this)">Integrados em tempo real</button>
+        <button class="opt" onclick="answerQ6('parcial', this)">Parcialmente integrados</button>
+        <button class="opt" onclick="answerQ6('manual', this)">Dependem de planilha manual</button>
+      </div>
+      <div class="agent-block" id="agent6-block" style="display:none;">
+        <div class="agent-tag">Marina — AI Data Architecture Agent</div>
+        <div class="agent-text" id="agent6-text"></div>
+      </div>
+      <button class="primary" id="btn6" style="display:none; margin-top:20px;" onclick="goTo(7)">Continuar</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 7 — Q7 LIFECYCLE (FERNANDA) -->
+  <section class="screen" id="s7">
+    <div class="progress" id="progress-7"></div>
+    <div class="card">
+      <label class="qlabel">Pergunta 7 de 7</label>
+      <h2>Depois da primeira venda, sua empresa possui um processo automatizado de expansão (upsell, cross-sell e reativação) conectado ao histórico do cliente?</h2>
+      <div class="options" id="q7-opts">
+        <button class="opt" onclick="answerQ7('sim', this)">Sim, automatizado</button>
+        <button class="opt" onclick="answerQ7('manual', this)">Existe, mas manual</button>
+        <button class="opt" onclick="answerQ7('nao', this)">Não existe</button>
+      </div>
+      <div class="agent-block" id="agent7-block" style="display:none;">
+        <div class="agent-tag">Fernanda — AI Lifecycle Agent</div>
+        <div class="agent-text" id="agent7-text"></div>
+      </div>
+      <button class="primary" id="btn7" style="display:none; margin-top:20px;" onclick="showResult()">Ver resultado</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 8 — RESULTADO -->
+  <section class="screen" id="s8">
+    <div class="card">
+      <div class="score-hero">
+        <div class="score-num" id="score-num">—</div>
+        <div class="score-label">é quanto da sua receita está fora do seu controle agora</div>
+      </div>
+
+      <p style="font-size:14px; color:var(--muted); margin-bottom:8px;">Lucas, Marina e Fernanda analisaram sua operação em conjunto — cada um na sua especialidade, todos sobre o mesmo contexto.</p>
+
+      <div class="bars">
+        <div class="bar-row"><div class="bname">Atribuição</div><div class="bar-track"><div class="bar-fill" id="bar-attr"></div></div><div class="bar-pct" id="pct-attr">0%</div></div>
+        <div class="bar-row"><div class="bname">Arquitetura</div><div class="bar-track"><div class="bar-fill" id="bar-arch"></div></div><div class="bar-pct" id="pct-arch">0%</div></div>
+        <div class="bar-row"><div class="bname">Lifecycle</div><div class="bar-track"><div class="bar-fill" id="bar-life"></div></div><div class="bar-pct" id="pct-life">0%</div></div>
+      </div>
+
+      <div class="agent-block" style="border-top:none; padding-top:0;">
+        <div class="agent-tag">Lucas — Attribution AI Agent</div>
+        <div class="agent-text" id="final-lucas"></div>
+      </div>
+      <div class="agent-block">
+        <div class="agent-tag">Marina — Data Architecture AI Agent</div>
+        <div class="agent-text" id="final-marina"></div>
+      </div>
+      <div class="agent-block">
+        <div class="agent-tag">Fernanda — Lifecycle AI Agent</div>
+        <div class="agent-text" id="final-fernanda"></div>
+      </div>
+
+      <div class="conclusion">
+        <div class="ctitle">Conclusão consolidada</div>
+        Os três chegaram na mesma conclusão. Sua empresa não apresenta apenas desafios de marketing ou comercial — o padrão identificado aponta para uma fragmentação de contexto entre as áreas que participam da geração de receita. Enquanto cada equipe decide com uma versão diferente da realidade, parte do potencial de crescimento permanece invisível.
+      </div>
+
+      <div id="cta-block">
+        <input type="email" id="lead-email" placeholder="Seu melhor e-mail">
+        <button class="primary" onclick="submitEmail()">Receber meu Relatório Executivo em PDF</button>
+        <div class="status-msg" id="email-status"></div>
+      </div>
+
+      <div id="post-email" style="display:none;">
+        <button class="secondary" onclick="window.open(CALENDLY_URL, '_blank')">Agendar Análise de Arquitetura (45min)</button>
+      </div>
+
+      <div class="footer-note">
+        A análise termina aqui. A pesquisa continua.<br>
+        Toda semana publicamos estudos, arquiteturas, implementações reais e aprendizados sobre Revenue Intelligence, Agentic AI e crescimento orientado por dados.<br>
+        <a href="#" target="_blank">Acompanhar o AI Applied Research Lab no LinkedIn →</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ====================================================================
+   CONFIG — troque isso antes de publicar
+   ==================================================================== */
+const REPORT_ENDPOINT = "/api/send-report"; // função serverless (api/send-report.js) — já cuida de PDF + Supabase + e-mail
+const CALENDLY_URL = "https://calendly.com/SEU-LINK-AQUI"; // troque pelo seu link real de agenda
+const TOTAL_STEPS = 7;
+
+let answers = { q1:0, q2:0, q3:0, q4:0, q5:null, q6:null, q7:null };
+
+function buildProgress(){
+  document.querySelectorAll('.progress').forEach(p => {
+    p.innerHTML = '';
+    for(let i=0;i<TOTAL_STEPS;i++){
+      const seg = document.createElement('div');
+      seg.className = 'seg';
+      seg.innerHTML = '<div class="fill"></div>';
+      p.appendChild(seg);
+    }
+  });
+}
+buildProgress();
+
+function updateProgress(step){
+  document.querySelectorAll('.progress').forEach(p => {
+    const segs = p.querySelectorAll('.seg .fill');
+    segs.forEach((f, i) => { f.style.width = i < step ? '100%' : '0%'; });
+  });
+}
+
+function goTo(n){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  updateProgress(n);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function answerQ1(){
+  const v = document.getElementById('q1').value;
+  if(!v){ return; }
+  answers.q1 = parseFloat(v);
+  document.getElementById('ack1').textContent = 'Anotado. Isso já entra como base do cálculo.';
+  setTimeout(()=>goTo(2), 700);
+}
+function answerQ2(){
+  const v = document.getElementById('q2').value;
+  if(!v){ return; }
+  answers.q2 = parseFloat(v);
+  goTo(3);
+}
+function answerQ3(){
+  const v = document.getElementById('q3').value;
+  if(!v){ return; }
+  answers.q3 = parseFloat(v);
+  goTo(4);
+}
+function answerQ4(){
+  const v = document.getElementById('q4').value;
+  if(!v){ return; }
+  answers.q4 = parseFloat(v);
+  document.getElementById('ack4').textContent = 'Base financeira completa. Agora vem a parte que a maioria evita responder com honestidade.';
+  setTimeout(()=>goTo(5), 900);
+}
+
+const Q5_COPY = {
+  sim: "Poucas empresas respondem isso com essa segurança. As respostas até aqui sugerem uma boa maturidade de atribuição — quero entender se ela se sustenta nas próximas etapas.",
+  parcial: "Esse é um dos sinais mais comuns de baixa capacidade de atribuição. Quando parte das vendas fechadas não mostra qual investimento as gerou, é comum que decisões de orçamento dependam mais de experiência do que de evidência. Vale aprofundar esse ponto nas próximas respostas.",
+  nao: "Esse padrão costuma dificultar decisões de investimento baseadas em evidência — sem saber a origem da receita, fica difícil responder algo como \"qual campanha trouxe os clientes mais lucrativos?\". Vou ver se esse cenário se repete no resto da operação."
+};
+function answerQ5(val, el){
+  answers.q5 = val;
+  document.querySelectorAll('#q5-opts .opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('agent5-text').textContent = Q5_COPY[val];
+  document.getElementById('agent5-block').style.display = 'block';
+  document.getElementById('btn5').style.display = 'block';
+}
+
+const Q6_COPY = {
+  integrado: "As respostas até aqui apontam pra um nível de integração raro — a maioria das operações que chega até essa pergunta ainda depende de planilha pra fechar esse ciclo.",
+  parcial: "Integração parcial costuma significar que a conexão existe no papel, mas alguém ainda precisa traduzir manualmente entre os sistemas. Esse é um dos pontos que mais tende a travar velocidade de decisão.",
+  manual: "Esse padrão geralmente não indica falha de time — costuma indicar ausência de uma arquitetura pensada desde o início. Planilha resolve no curto prazo, mas tende a cobrar a conta depois."
+};
+function answerQ6(val, el){
+  answers.q6 = val;
+  document.querySelectorAll('#q6-opts .opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('agent6-text').textContent = Q6_COPY[val];
+  document.getElementById('agent6-block').style.display = 'block';
+  document.getElementById('btn6').style.display = 'block';
+}
+
+const Q7_COPY = {
+  sim: "As respostas sugerem que esse ponto já está resolvido — algo que a maioria das operações só endereça depois de anos deixando receita na mesa.",
+  manual: "É comum observar que, quando esse processo ainda é manual, parte da receita mais barata de se gerar — vinda de quem já é cliente — segue sem captura estruturada.",
+  nao: "É comum observar que, sem processo automático de expansão, parte da receita mais barata de se gerar — vinda de quem já é cliente — segue sem captura estruturada."
+};
+function answerQ7(val, el){
+  answers.q7 = val;
+  document.querySelectorAll('#q7-opts .opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('agent7-text').textContent = Q7_COPY[val];
+  document.getElementById('agent7-block').style.display = 'block';
+  document.getElementById('btn7').style.display = 'block';
+}
+
+function calcScores(){
+  // Atribuição: sim=90, parcial=50, nao=15 (base) — ajustado por % de conversão como proxy de maturidade comercial
+  const attrBase = { sim:90, parcial:50, nao:15 }[answers.q5];
+  // Arquitetura
+  const archBase = { integrado:90, parcial:50, manual:15 }[answers.q6];
+  // Lifecycle
+  const lifeBase = { sim:90, manual:45, nao:15 }[answers.q7];
+
+  return { attr: attrBase, arch: archBase, life: lifeBase };
+}
+
+function calcRevenueAtRisk(){
+  const faturamentoMensal = (answers.q2 * (answers.q3/100)) * answers.q4;
+  const faturamentoAnual = faturamentoMensal * 12;
+
+  const attrFactor = { sim:0.05, parcial:0.35, nao:0.6 }[answers.q5];
+  const lifeFactor = { sim:0.05, manual:0.30, nao:0.5 }[answers.q7];
+
+  const receitaNaoAtribuida = faturamentoAnual * attrFactor;
+  const receitaLatente = faturamentoAnual * lifeFactor * 0.4; // upsell/reativação como fração do ciclo de vida
+
+  const total = receitaNaoAtribuida + receitaLatente;
+  return total;
+}
+
+function formatBRL(v){
+  if(!isFinite(v) || v<=0) return "R$ 0";
+  return v.toLocaleString('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:0});
+}
+
+function showResult(){
+  const scores = calcScores();
+  const total = calcRevenueAtRisk();
+
+  document.getElementById('score-num').textContent = formatBRL(total);
+
+  document.getElementById('final-lucas').textContent = "Comecei olhando pra origem da receita. Pelas suas respostas, parte das vendas perde a conexão com o investimento que as gerou. Isso limita a capacidade de otimizar orçamento com confiança.";
+  document.getElementById('final-marina').textContent = "O ponto que o Lucas levantou normalmente não acontece por falta de dado. Acontece quando marketing, CRM e financeiro registram informação em lugares diferentes e deixam de compartilhar contexto.";
+  document.getElementById('final-fernanda').textContent = "E existe mais uma consequência. Quando o contexto se perde depois da venda, a empresa também perde oportunidades de expansão, reativação e retenção que poderiam aumentar receita sem depender só de cliente novo.";
+
+  goTo(8);
+
+  setTimeout(()=>{
+    document.getElementById('bar-attr').style.width = scores.attr + '%';
+    document.getElementById('bar-arch').style.width = scores.arch + '%';
+    document.getElementById('bar-life').style.width = scores.life + '%';
+    document.getElementById('pct-attr').textContent = scores.attr + '%';
+    document.getElementById('pct-arch').textContent = scores.arch + '%';
+    document.getElementById('pct-life').textContent = scores.life + '%';
+  }, 300);
+}
+
+async function submitEmail(){
+  const email = document.getElementById('lead-email').value.trim();
+  const statusEl = document.getElementById('email-status');
+  if(!email || !email.includes('@')){
+    statusEl.textContent = 'Digite um e-mail válido.';
+    return;
+  }
+
+  const btn = document.querySelector('#cta-block button.primary');
+  btn.disabled = true;
+  statusEl.textContent = 'Gerando seu relatório...';
+
+  try{
+    const resp = await fetch(REPORT_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, answers })
+    });
+    if(!resp.ok) throw new Error('Falha no envio');
+
+    document.getElementById('cta-block').style.display = 'none';
+    statusEl.textContent = '';
+    document.getElementById('post-email').style.display = 'block';
+    const note = document.createElement('div');
+    note.className = 'status-msg';
+    note.style.marginBottom = '20px';
+    note.textContent = 'Enviado! Seu relatório chegou no e-mail.';
+    document.getElementById('post-email').prepend(note);
+  }catch(e){
+    console.error(e);
+    statusEl.textContent = 'Algo falhou no envio. Tente de novo em instantes.';
+    btn.disabled = false;
+  }
+}
+</script>
+
+<!--
+============================================================
+SETUP — 100% automatizado, veja SETUP.md na mesma pasta
+============================================================
+Resumo: este front-end chama /api/send-report (função serverless
+incluída no arquivo api/send-report.js) que gera o PDF, salva o
+lead no Supabase e envia o e-mail — tudo automático, sem toque
+manual seu. Configure as variáveis de ambiente na Vercel
+(RESEND_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY, FROM_EMAIL)
+e troque CALENDLY_URL no topo do <script> pelo seu link real.
+Veja o passo a passo completo em SETUP.md.
+============================================================
+-->
+</body>
+</html>
