@@ -61,6 +61,24 @@ export default async function handler(req, res) {
           content: Buffer.from(pdfBytes).toString('base64')
         }]
       });
+
+      // Notificação rápida pra você mesmo, sempre que alguém completar o diagnóstico
+      if (process.env.NOTIFY_EMAIL) {
+        try {
+          await resend.emails.send({
+            from: process.env.FROM_EMAIL || 'AI Applied <onboarding@resend.dev>',
+            to: process.env.NOTIFY_EMAIL,
+            subject: `Novo Diagnóstico: ${email}`,
+            html: `<p>Novo lead completou o Diagnóstico de Revenue Intelligence.</p>
+                   <p><b>E-mail:</b> ${email}</p>
+                   <p><b>Receita em risco estimada:</b> R$ ${Math.round(revenueAtRisk).toLocaleString('pt-BR')}</p>
+                   <p><b>Scores:</b> Atribuição ${scores.attr} · Arquitetura ${scores.arch} · Lifecycle ${scores.life}</p>`
+          });
+        } catch (notifyErr) {
+          // Falha na notificação não deve travar o envio pro lead
+          console.error('Erro ao notificar:', notifyErr);
+        }
+      }
     }
 
     return res.status(200).json({ ok: true });
